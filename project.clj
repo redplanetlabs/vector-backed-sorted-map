@@ -2,7 +2,7 @@
   :description "A sorted map implementation designed for ultra-fast initialization and merge operations."
   :url "https://github.com/redplanetlabs/vector-backed-sorted-map"
   :dependencies [[org.clojure/clojure "1.10.0"]
-                 [com.taoensso/nippy "2.14.0"]]
+                 [potemkin "0.4.5"]]
   :test-paths ["test"]
   :plugins [[lein-exec "0.3.7"]]
   :profiles {:dev {:dependencies
