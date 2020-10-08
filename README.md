@@ -5,9 +5,17 @@ A sorted map implementation designed for ultra-fast initialization and merge ope
 
 Maps returned by this library behave like those returned by Clojure `sorted-map` (PersistentTreeMap), but they have O(1) instantiation time instead of O(N log N). Instantiating a vector-backed sorted map (VBSM) will be dramatically faster than `sorted-map` for more than a small number of elements. The only catch is that your k/v pairs must already be sorted. It's not hard to structure your application such that the data will always be sorted in a previous step or read from disk in sorted order.
 
+## Why do I want this?
+
+The whole point is to be able to provide `sorted-map`-like access pattern over data that isn't currently in a `sorted-map`.
+
+Let's say you're writing a flat-file database of sorted k/v pairs (something like RocksDB). The files are already sorted in the regular course of operation, but when you load a "file" or a "block" from disk to service a read, that data isn't currently in a `sorted-map`. If you put it into one, you'll pay O(N log N) to do so, which is a pretty bad deal if you're only going to look up a single k/v pair. Even if you'll do something smart like cache the resulting `sorted-map` for future read operations, you had a pay a greater-than-linear cost to get that map into your cache!
+
+There are a number of existing sorted map libraries that support faster initialization when the input is explicitly sorted, but sadly Clojure doesn't have one, and none of the exiting data structures are compatible with external options like Java's TreeMap.
+
 ## Usage
 
-Add a dependency via the mechanism of your choice.
+Add a dependency on the [Clojars package](https://clojars.org/com.rpl/vector-backed-sorted-map)
 
 In your code:
 
@@ -33,7 +41,7 @@ Because of their flat structure, VBSMs are very amenable to high-performance mer
 
 When you instantiate a VBSM via `vector-backed-sorted-map`, you get back an "updatable" VBSM, that is, one that can be modified normally by `assoc`, `dissoc`, etc. This updatability is provided via an internal hidden overlay map, which is just a regular Clojure sorted-map. This approach avoids uncesssary vector surgery and makes random updates fairly cheap, particularly when the total number of updates is relatively small. However, there is an added cost at iteration or `vectorize` time, as the overlay has to be flattened into the backing vector to produce a new backing vector, making the operation take O(N).
 
-It can be difficult to reason about whether a given map ever gets updated, so we provide the option to get a "read-only" VBSM by calling `read-only-vector-backed-sorted-map`. `assoc`, `dissoc`, etc will throw exceptions when invoked on a read-only VBSM. Using a read-only VBSM allows you to ensure that merge and `vectorize` operations down the road will always be consistently O(1), which can be important for performance-critical code. 
+It can be difficult to reason about whether a given map ever gets updated, so we provide the option to get a "read-only" VBSM by calling `read-only-vector-backed-sorted-map`. `assoc`, `dissoc`, etc will throw exceptions when invoked on a read-only VBSM. Using a read-only VBSM allows you to ensure that merge and `vectorize` operations down the road will always be consistently O(1), which can be important for performance-critical code.
 
 ## License
 
